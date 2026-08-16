@@ -30,8 +30,8 @@ def display_lines(img, lines):
     line_image = np.zeros_like(img)
     if lines is not None:
         for line in lines:
-            for x1, y1, x2, y2 in line:
-                cv.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 10)
+            x1, y1, x2, y2 = np.reshape(line, 4)
+            cv.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 10)
     return line_image
 
 def make_coordinates(img, line_parameters):
@@ -45,22 +45,22 @@ def make_coordinates(img, line_parameters):
 def average_slope_intercept(img, lines):
     if lines is None:
         return []
-    
+
     left_fit = []
     right_fit = []
 
     for line in lines:
-        for x1, y1, x2, y2 in line:
-            parameters = np.polyfit((x1, x2), (y1, y2), 1)
-            slope, intercept = parameters
+        x1, y1, x2, y2 = np.reshape(line, 4)   # works whether line is (1,4) or (4,)
+        parameters = np.polyfit((x1, x2), (y1, y2), 1)
+        slope, intercept = parameters
 
-            if abs(slope) < 0.5: # filtering out nearly horizontal lines
-                continue
+        if abs(slope) < 0.5:  # filtering out nearly horizontal lines
+            continue
 
-            if slope < 0:
-                left_fit.append((slope, intercept))
-            else:
-                right_fit.append((slope, intercept))
+        if slope < 0:
+            left_fit.append((slope, intercept))
+        else:
+            right_fit.append((slope, intercept))
 
     averaged_lines = []
     if left_fit:
